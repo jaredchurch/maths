@@ -36,7 +36,7 @@
       border-radius: 24px;
       padding: 40px;
       width: 100%;
-      max-width: 520px;
+      max-width: 540px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       text-align: center;
     }
@@ -60,7 +60,6 @@
       transition: all 0.2s;
       font-weight: 600;
     }
-
     .op-btn:hover { border-color: #667eea; color: #667eea; }
     .op-btn.active {
       background: linear-gradient(135deg, #667eea, #764ba2);
@@ -79,16 +78,8 @@
       transition: opacity 0.3s;
     }
     .prev-feedback.visible { opacity: 1; }
-    .prev-feedback.correct {
-      background: #f0fdf4;
-      color: #16a34a;
-      border: 2px solid #bbf7d0;
-    }
-    .prev-feedback.wrong {
-      background: #fef2f2;
-      color: #dc2626;
-      border: 2px solid #fecaca;
-    }
+    .prev-feedback.correct { background: #f0fdf4; color: #16a34a; border: 2px solid #bbf7d0; }
+    .prev-feedback.wrong   { background: #fef2f2; color: #dc2626; border: 2px solid #fecaca; }
 
     .question {
       font-size: 3rem;
@@ -116,7 +107,6 @@
       outline: none;
       transition: border-color 0.2s;
     }
-
     #answer:focus { border-color: #667eea; }
 
     #check-btn {
@@ -131,11 +121,9 @@
       transition: transform 0.1s, box-shadow 0.2s;
       box-shadow: 0 4px 15px rgba(102,126,234,0.5);
     }
-
     #check-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.6); }
     #check-btn:active { transform: translateY(0); }
 
-    /* Score bar — top row */
     .score-bar {
       display: flex;
       justify-content: space-between;
@@ -147,7 +135,6 @@
       margin-bottom: 10px;
     }
 
-    /* Stats bar — second row */
     .stats-bar {
       display: flex;
       justify-content: space-between;
@@ -155,34 +142,47 @@
       padding: 12px 20px;
       background: #f1f5f9;
       border-radius: 16px;
+      margin-bottom: 16px;
     }
 
     .score-item { text-align: center; }
+    .score-num { font-size: 1.6rem; font-weight: 800; color: #333; }
+    .stat-num  { font-size: 1.25rem; font-weight: 800; color: #333; }
+    .score-label, .stat-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    .score-num {
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #333;
+    .streak-num   { color: #f59e0b; }
+    .correct-num  { color: #22c55e; }
+    .wrong-num    { color: #ef4444; }
+    .accuracy-num { color: #667eea; }
+    .time-num     { color: #0ea5e9; }
+
+    /* Bell curve */
+    .bell-wrap {
+      border-radius: 16px;
+      background: #f8faff;
+      border: 1.5px solid #e0e7ff;
+      padding: 12px 12px 6px;
     }
 
-    .stat-num {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #333;
-    }
-
-    .score-label, .stat-label {
-      font-size: 0.72rem;
+    .bell-title {
+      font-size: 0.75rem;
       color: #888;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      margin-bottom: 6px;
     }
 
-    .streak-num { color: #f59e0b; }
-    .correct-num { color: #22c55e; }
-    .wrong-num { color: #ef4444; }
-    .accuracy-num { color: #667eea; }
-    .time-num { color: #0ea5e9; }
+    #bell-canvas {
+      width: 100%;
+      height: 110px;
+      display: block;
+    }
+
+    .bell-hint {
+      font-size: 0.72rem;
+      color: #aaa;
+      margin-top: 4px;
+    }
 
     .emoji-pop {
       position: fixed;
@@ -193,16 +193,16 @@
     }
 
     @keyframes floatUp {
-      0% { opacity: 1; transform: translateY(0) scale(1); }
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
       100% { opacity: 0; transform: translateY(-120px) scale(1.5); }
     }
 
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-8px); }
-      40% { transform: translateX(8px); }
-      60% { transform: translateX(-6px); }
-      80% { transform: translateX(6px); }
+      20%      { transform: translateX(-8px); }
+      40%      { transform: translateX(8px); }
+      60%      { transform: translateX(-6px); }
+      80%      { transform: translateX(6px); }
     }
     .shake { animation: shake 0.35s ease; }
   </style>
@@ -260,6 +260,13 @@
       <div class="stat-label">Std Dev</div>
     </div>
   </div>
+
+  <!-- Bell curve -->
+  <div class="bell-wrap" id="bell-wrap" style="display:none;">
+    <div class="bell-title">Response Time Distribution</div>
+    <canvas id="bell-canvas"></canvas>
+    <div class="bell-hint" id="bell-hint"></div>
+  </div>
 </div>
 
 <script>
@@ -267,7 +274,9 @@
   let a = 0, b = 0, correctAnswer = 0;
   let correct = 0, wrong = 0, streak = 0;
   let questionStartTime = null;
-  let answerTimes = []; // all answer times in seconds
+  let answerTimes = [];
+  let lastTime = null;
+  let lastWasCorrect = null;
 
   const opRanges = {
     '+': () => ({ a: rand(1, 20), b: rand(1, 20) }),
@@ -276,23 +285,207 @@
     '÷': () => { let d = rand(1, 10), q = rand(1, 10); return { a: d * q, b: d }; }
   };
 
-  function rand(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
+  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-  function mean(arr) {
-    return arr.reduce((s, v) => s + v, 0) / arr.length;
-  }
+  function mean(arr) { return arr.reduce((s, v) => s + v, 0) / arr.length; }
 
   function stddev(arr) {
     if (arr.length < 2) return null;
     const m = mean(arr);
-    const variance = arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length;
-    return Math.sqrt(variance);
+    return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length);
   }
 
-  function formatTime(s) {
-    return s.toFixed(1) + 's';
+  function formatTime(s) { return s.toFixed(1) + 's'; }
+
+  // Normal distribution PDF
+  function normPDF(x, mu, sigma) {
+    return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mu) / sigma) ** 2);
+  }
+
+  function drawBellCurve() {
+    if (answerTimes.length < 2) return;
+
+    const mu = mean(answerTimes);
+    const sd = stddev(answerTimes);
+    if (!sd || sd === 0) return;
+
+    const canvas = document.getElementById('bell-canvas');
+    // Set physical pixel size for sharpness
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = rect.width  * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = rect.height;
+    const padX = 28, padTop = 10, padBot = 22;
+    const plotW = W - padX * 2;
+    const plotH = H - padTop - padBot;
+
+    // X range: mu ± 3.5 sigma, but always include lastTime
+    let xMin = mu - 3.5 * sd;
+    let xMax = mu + 3.5 * sd;
+    if (lastTime !== null) {
+      xMin = Math.min(xMin, lastTime - sd * 0.5);
+      xMax = Math.max(xMax, lastTime + sd * 0.5);
+    }
+    xMin = Math.max(0, xMin);
+
+    const steps = 300;
+    const dx = (xMax - xMin) / steps;
+
+    // Compute Y values
+    const ys = [];
+    for (let i = 0; i <= steps; i++) {
+      ys.push(normPDF(xMin + i * dx, mu, sd));
+    }
+    const yMax = Math.max(...ys);
+
+    function toCanvasX(x) { return padX + ((x - xMin) / (xMax - xMin)) * plotW; }
+    function toCanvasY(y) { return padTop + plotH - (y / yMax) * plotH; }
+
+    ctx.clearRect(0, 0, W, H);
+
+    // --- Shaded area under curve (full) ---
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(xMin), toCanvasY(0));
+    for (let i = 0; i <= steps; i++) {
+      ctx.lineTo(toCanvasX(xMin + i * dx), toCanvasY(ys[i]));
+    }
+    ctx.lineTo(toCanvasX(xMax), toCanvasY(0));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(102,126,234,0.12)';
+    ctx.fill();
+
+    // --- Highlight region: last answer time ± some visual band ---
+    if (lastTime !== null) {
+      const highlightColor = lastWasCorrect ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)';
+      // Shade from xMin up to lastTime (cumulative feel)
+      ctx.beginPath();
+      const tStart = Math.max(xMin, lastTime - dx);
+      const tEnd   = Math.min(xMax, lastTime + dx);
+      // Draw a narrow vertical band at lastTime
+      const lx = toCanvasX(lastTime);
+      ctx.beginPath();
+      // Fill area under curve up to lastTime
+      ctx.moveTo(toCanvasX(xMin), toCanvasY(0));
+      for (let i = 0; i <= steps; i++) {
+        const xi = xMin + i * dx;
+        if (xi > lastTime) break;
+        ctx.lineTo(toCanvasX(xi), toCanvasY(ys[i]));
+      }
+      // Interpolate exactly to lastTime
+      const fracIdx = (lastTime - xMin) / dx;
+      const i0 = Math.floor(fracIdx);
+      const frac = fracIdx - i0;
+      const yAtLast = i0 < ys.length - 1
+        ? ys[i0] + frac * (ys[i0 + 1] - ys[i0])
+        : ys[ys.length - 1];
+      ctx.lineTo(toCanvasX(lastTime), toCanvasY(yAtLast));
+      ctx.lineTo(toCanvasX(lastTime), toCanvasY(0));
+      ctx.closePath();
+      ctx.fillStyle = lastWasCorrect ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)';
+      ctx.fill();
+    }
+
+    // --- Bell curve line ---
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const cx = toCanvasX(xMin + i * dx);
+      const cy = toCanvasY(ys[i]);
+      i === 0 ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
+    }
+    ctx.strokeStyle = '#667eea';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // --- Mean line ---
+    const mx = toCanvasX(mu);
+    ctx.beginPath();
+    ctx.moveTo(mx, padTop);
+    ctx.lineTo(mx, padTop + plotH);
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // --- Last answer time marker ---
+    if (lastTime !== null) {
+      const lx = toCanvasX(lastTime);
+      const fracIdx = (lastTime - xMin) / dx;
+      const i0 = Math.floor(Math.max(0, Math.min(steps - 1, fracIdx)));
+      const frac = fracIdx - i0;
+      const yAtLast = i0 < ys.length - 1
+        ? ys[i0] + frac * (ys[i0 + 1] - ys[i0])
+        : ys[ys.length - 1];
+      const ly = toCanvasY(yAtLast);
+
+      const dotColor = lastWasCorrect ? '#22c55e' : '#ef4444';
+
+      // Vertical line from baseline to dot
+      ctx.beginPath();
+      ctx.moveTo(lx, padTop + plotH);
+      ctx.lineTo(lx, ly);
+      ctx.strokeStyle = dotColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Dot on curve
+      ctx.beginPath();
+      ctx.arc(lx, ly, 6, 0, Math.PI * 2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Time label above dot
+      ctx.fillStyle = dotColor;
+      ctx.font = 'bold 11px Segoe UI, sans-serif';
+      ctx.textAlign = lx > W * 0.75 ? 'right' : lx < W * 0.25 ? 'left' : 'center';
+      ctx.fillText(formatTime(lastTime), lx, Math.max(padTop + 10, ly - 10));
+    }
+
+    // --- X axis labels ---
+    ctx.fillStyle = '#aaa';
+    ctx.font = '10px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    // Show labels at mu-2sd, mu-sd, mu, mu+sd, mu+2sd
+    [-2, -1, 0, 1, 2].forEach(n => {
+      const xVal = mu + n * sd;
+      if (xVal < xMin || xVal > xMax) return;
+      const cx = toCanvasX(xVal);
+      ctx.fillStyle = n === 0 ? '#667eea' : '#bbb';
+      ctx.fillText(formatTime(xVal), cx, H - 4);
+    });
+
+    // Update hint
+    const zScore = lastTime !== null ? ((lastTime - mu) / sd) : null;
+    const bellWrap = document.getElementById('bell-wrap');
+    bellWrap.style.display = 'block';
+
+    if (zScore !== null) {
+      const pct = Math.round(normCDF(zScore) * 100);
+      const hintEl = document.getElementById('bell-hint');
+      const fasterSlower = zScore < 0 ? 'faster' : 'slower';
+      hintEl.textContent = `Last answer (${formatTime(lastTime)}) was ${fasterSlower} than ${zScore < 0 ? 100 - pct : pct}% of answers`;
+    }
+  }
+
+  // Approximation of the normal CDF using error function
+  function normCDF(z) {
+    return 0.5 * (1 + erf(z / Math.sqrt(2)));
+  }
+
+  function erf(x) {
+    // Abramowitz & Stegun approximation
+    const t = 1 / (1 + 0.3275911 * Math.abs(x));
+    const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+    const result = 1 - poly * Math.exp(-x * x);
+    return x >= 0 ? result : -result;
   }
 
   function updateStats() {
@@ -308,6 +501,8 @@
       const sd = stddev(answerTimes);
       document.getElementById('stddev-time').textContent = sd !== null ? formatTime(sd) : '—';
     }
+
+    drawBellCurve();
   }
 
   function setOp(btn) {
@@ -337,7 +532,6 @@
     answerEl.value = '';
     answerEl.disabled = false;
     answerEl.focus();
-
     questionStartTime = performance.now();
   }
 
@@ -348,6 +542,7 @@
 
     const elapsed = (performance.now() - questionStartTime) / 1000;
     answerTimes.push(elapsed);
+    lastTime = elapsed;
 
     const userAnswer = parseFloat(input);
     const fb = document.getElementById('prev-feedback');
@@ -355,6 +550,7 @@
     if (userAnswer === correctAnswer) {
       correct++;
       streak++;
+      lastWasCorrect = true;
       fb.textContent = streak >= 3
         ? `🔥 ${a} ${op} ${b} = ${correctAnswer} — Correct! ${streak} in a row! (${formatTime(elapsed)})`
         : `✅ ${a} ${op} ${b} = ${correctAnswer} — Correct! (${formatTime(elapsed)})`;
@@ -363,6 +559,7 @@
     } else {
       wrong++;
       streak = 0;
+      lastWasCorrect = false;
       fb.textContent = `❌ ${a} ${op} ${b} = ${correctAnswer} — you said ${userAnswer} (${formatTime(elapsed)})`;
       fb.className = 'prev-feedback wrong visible';
       answerEl.classList.add('shake');
@@ -386,6 +583,9 @@
   document.getElementById('answer').addEventListener('keydown', e => {
     if (e.key === 'Enter') checkAnswer();
   });
+
+  // Redraw bell curve on resize
+  window.addEventListener('resize', () => { if (answerTimes.length >= 2) drawBellCurve(); });
 
   generateQuestion();
 </script>
