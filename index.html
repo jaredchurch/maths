@@ -36,7 +36,7 @@
       border-radius: 24px;
       padding: 40px;
       width: 100%;
-      max-width: 480px;
+      max-width: 520px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       text-align: center;
     }
@@ -68,16 +68,15 @@
       color: white;
     }
 
-    /* Previous answer feedback banner */
     .prev-feedback {
       min-height: 40px;
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 700;
       border-radius: 12px;
       padding: 8px 16px;
       margin-bottom: 18px;
-      transition: opacity 0.3s;
       opacity: 0;
+      transition: opacity 0.3s;
     }
     .prev-feedback.visible { opacity: 1; }
     .prev-feedback.correct {
@@ -136,6 +135,7 @@
     #check-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.6); }
     #check-btn:active { transform: translateY(0); }
 
+    /* Score bar — top row */
     .score-bar {
       display: flex;
       justify-content: space-between;
@@ -144,6 +144,17 @@
       background: #f8f8fc;
       border-radius: 16px;
       margin-top: 8px;
+      margin-bottom: 10px;
+    }
+
+    /* Stats bar — second row */
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: #f1f5f9;
+      border-radius: 16px;
     }
 
     .score-item { text-align: center; }
@@ -154,8 +165,14 @@
       color: #333;
     }
 
-    .score-label {
-      font-size: 0.75rem;
+    .stat-num {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #333;
+    }
+
+    .score-label, .stat-label {
+      font-size: 0.72rem;
       color: #888;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -164,6 +181,8 @@
     .streak-num { color: #f59e0b; }
     .correct-num { color: #22c55e; }
     .wrong-num { color: #ef4444; }
+    .accuracy-num { color: #667eea; }
+    .time-num { color: #0ea5e9; }
 
     .emoji-pop {
       position: fixed;
@@ -201,7 +220,6 @@
     <button class="op-btn" data-op="÷" onclick="setOp(this)">➗ Divide</button>
   </div>
 
-  <!-- Shows result of PREVIOUS answer while new question is ready -->
   <div class="prev-feedback" id="prev-feedback"></div>
 
   <div class="question" id="question">Loading...</div>
@@ -211,6 +229,7 @@
     <button id="check-btn" onclick="checkAnswer()">Check ✅</button>
   </div>
 
+  <!-- Row 1: correct / wrong / streak -->
   <div class="score-bar">
     <div class="score-item">
       <div class="score-num correct-num" id="correct-count">0</div>
@@ -225,12 +244,30 @@
       <div class="score-label">🔥 Streak</div>
     </div>
   </div>
+
+  <!-- Row 2: accuracy / avg time / stddev -->
+  <div class="stats-bar">
+    <div class="score-item">
+      <div class="stat-num accuracy-num" id="accuracy">—</div>
+      <div class="stat-label">Accuracy</div>
+    </div>
+    <div class="score-item">
+      <div class="stat-num time-num" id="avg-time">—</div>
+      <div class="stat-label">Avg Time</div>
+    </div>
+    <div class="score-item">
+      <div class="stat-num time-num" id="stddev-time">—</div>
+      <div class="stat-label">Std Dev</div>
+    </div>
+  </div>
 </div>
 
 <script>
   let op = '+';
   let a = 0, b = 0, correctAnswer = 0;
   let correct = 0, wrong = 0, streak = 0;
+  let questionStartTime = null;
+  let answerTimes = []; // all answer times in seconds
 
   const opRanges = {
     '+': () => ({ a: rand(1, 20), b: rand(1, 20) }),
@@ -241,6 +278,36 @@
 
   function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function mean(arr) {
+    return arr.reduce((s, v) => s + v, 0) / arr.length;
+  }
+
+  function stddev(arr) {
+    if (arr.length < 2) return null;
+    const m = mean(arr);
+    const variance = arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length;
+    return Math.sqrt(variance);
+  }
+
+  function formatTime(s) {
+    return s.toFixed(1) + 's';
+  }
+
+  function updateStats() {
+    const total = correct + wrong;
+    document.getElementById('correct-count').textContent = correct;
+    document.getElementById('wrong-count').textContent = wrong;
+    document.getElementById('streak-count').textContent = streak;
+    document.getElementById('accuracy').textContent = total > 0
+      ? Math.round((correct / total) * 100) + '%' : '—';
+
+    if (answerTimes.length > 0) {
+      document.getElementById('avg-time').textContent = formatTime(mean(answerTimes));
+      const sd = stddev(answerTimes);
+      document.getElementById('stddev-time').textContent = sd !== null ? formatTime(sd) : '—';
+    }
   }
 
   function setOp(btn) {
@@ -270,12 +337,17 @@
     answerEl.value = '';
     answerEl.disabled = false;
     answerEl.focus();
+
+    questionStartTime = performance.now();
   }
 
   function checkAnswer() {
     const answerEl = document.getElementById('answer');
     const input = answerEl.value.trim();
     if (input === '') return;
+
+    const elapsed = (performance.now() - questionStartTime) / 1000;
+    answerTimes.push(elapsed);
 
     const userAnswer = parseFloat(input);
     const fb = document.getElementById('prev-feedback');
@@ -284,24 +356,20 @@
       correct++;
       streak++;
       fb.textContent = streak >= 3
-        ? `🔥 ${a} ${op} ${b} = ${correctAnswer} — Correct! ${streak} in a row!`
-        : `✅ ${a} ${op} ${b} = ${correctAnswer} — Correct!`;
+        ? `🔥 ${a} ${op} ${b} = ${correctAnswer} — Correct! ${streak} in a row! (${formatTime(elapsed)})`
+        : `✅ ${a} ${op} ${b} = ${correctAnswer} — Correct! (${formatTime(elapsed)})`;
       fb.className = 'prev-feedback correct visible';
       spawnEmoji(streak >= 5 ? '🌟' : '⭐');
     } else {
       wrong++;
       streak = 0;
-      fb.textContent = `❌ ${a} ${op} ${b} = ${correctAnswer} — you said ${userAnswer}`;
+      fb.textContent = `❌ ${a} ${op} ${b} = ${correctAnswer} — you said ${userAnswer} (${formatTime(elapsed)})`;
       fb.className = 'prev-feedback wrong visible';
       answerEl.classList.add('shake');
       setTimeout(() => answerEl.classList.remove('shake'), 350);
     }
 
-    document.getElementById('correct-count').textContent = correct;
-    document.getElementById('wrong-count').textContent = wrong;
-    document.getElementById('streak-count').textContent = streak;
-
-    // Immediately load next question — feedback stays visible above
+    updateStats();
     generateQuestion();
   }
 
