@@ -279,10 +279,10 @@
   let lastWasCorrect = null;
 
   const opRanges = {
-    '+': () => ({ a: rand(1, 20), b: rand(1, 20) }),
-    '-': () => { let x = rand(5, 20), y = rand(1, x); return { a: x, b: y }; },
-    '×': () => ({ a: rand(1, 10), b: rand(1, 10) }),
-    '÷': () => { let d = rand(1, 10), q = rand(1, 10); return { a: d * q, b: d }; }
+    '+': () => ({ a: rand(1, 100), b: rand(1, 100) }),
+    '-': () => { let x = rand(1, 100), y = rand(1, x); return { a: x, b: y }; },
+    '×': () => ({ a: rand(1, 12), b: rand(1, 12) }),
+    '÷': () => { let d = rand(1, 12), q = rand(1, 12); return { a: d * q, b: d }; }
   };
 
   function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
