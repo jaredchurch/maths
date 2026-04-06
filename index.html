@@ -251,6 +251,82 @@
     #bell-canvas { height: 110px; }
     #bar-canvas  { height: 120px; }
 
+
+    /* ── Export / Import ── */
+    .data-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #764ba2;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+      user-select: none;
+    }
+    .data-panel {
+      background: #faf5ff;
+      border: 1.5px solid #e9d5ff;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+      text-align: left;
+      display: none;
+    }
+    .data-panel.open { display: block; }
+    .data-panel-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .username-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .username-row label { font-size: 0.8rem; color: #888; white-space: nowrap; }
+    .username-row input[type="text"] {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      color: #333;
+      outline: none;
+    }
+    .username-row input[type="text"]:focus { border-color: #667eea; }
+    .data-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .data-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 9px 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .data-btn:active { opacity: 0.75; }
+    .btn-export { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+    .btn-import { background: #f1f5f9; color: #555; border: 1.5px solid #e0e0e0; }
+    .btn-reset  { background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; }
+    .data-status {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 8px;
+      min-height: 16px;
+      text-align: center;
+    }
+    .data-status.ok  { color: #16a34a; }
+    .data-status.err { color: #dc2626; }
+    #import-file { display: none; }
+
     /* ── Emoji pop ── */
     .emoji-pop {
       position: fixed;
@@ -279,6 +355,25 @@
 <p class="subtitle">Let's get those brain muscles going!</p>
 
 <div class="card">
+
+  <!-- Export / Import -->
+  <div class="data-toggle" onclick="toggleDataPanel()">
+    💾 Export &amp; Import results <span id="data-arrow">▼</span>
+  </div>
+  <div class="data-panel" id="data-panel">
+    <div class="data-panel-title">Save or load your session data</div>
+    <div class="username-row">
+      <label>Name:</label>
+      <input type="text" id="username" placeholder="e.g. Finn" maxlength="40" oninput="saveUsername()"/>
+    </div>
+    <div class="data-btn-row">
+      <button class="data-btn btn-export" onclick="exportResults()">⬇ Export JSON</button>
+      <button class="data-btn btn-import" onclick="document.getElementById('import-file').click()">⬆ Import JSON</button>
+      <button class="data-btn btn-reset"  onclick="resetSession()">🗑 Reset</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" onchange="importResults(event)"/>
+    <div class="data-status" id="data-status"></div>
+  </div>
 
   <!-- Op selector -->
   <div class="ops">
@@ -837,6 +932,143 @@
     el.style.top  = '50vh';
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1000);
+  }
+
+
+  // ── Username ───────────────────────────────────────────────────
+  function saveUsername() {
+    localStorage.setItem('mathsUsername', document.getElementById('username').value.trim());
+  }
+  function loadUsername() {
+    const u = localStorage.getItem('mathsUsername') || '';
+    document.getElementById('username').value = u;
+  }
+  function getUsername() {
+    return document.getElementById('username').value.trim() || 'Anonymous';
+  }
+
+  // ── Data panel toggle ──────────────────────────────────────────
+  function toggleDataPanel() {
+    const panel = document.getElementById('data-panel');
+    const arrow = document.getElementById('data-arrow');
+    const open  = panel.classList.toggle('open');
+    arrow.textContent = open ? '▲' : '▼';
+  }
+
+  // ── Export ─────────────────────────────────────────────────────
+  function exportResults() {
+    if (answerTimes.length === 0) {
+      setDataStatus('Nothing to export yet — answer some questions first!', 'err');
+      return;
+    }
+    const data = {
+      version:   1,
+      username:  getUsername(),
+      exported:  new Date().toISOString(),
+      op:        op,
+      correct:   correct,
+      wrong:     wrong,
+      streak:    streak,
+      answerTimes:   answerTimes,
+      answerCorrect: answerCorrect,
+      ranges: {
+        addAMin: getR('add-a-min'), addAMax: getR('add-a-max'),
+        addBMin: getR('add-b-min'), addBMax: getR('add-b-max'),
+        subMin:  getR('sub-min'),   subMax:  getR('sub-max'),
+        mulAMin: getR('mul-a-min'), mulAMax: getR('mul-a-max'),
+        mulBMin: getR('mul-b-min'), mulBMax: getR('mul-b-max'),
+        divDMin: getR('div-d-min'), divDMax: getR('div-d-max'),
+        divQMin: getR('div-q-min'), divQMax: getR('div-q-max'),
+      }
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const ts   = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+    a.href     = url;
+    a.download = `maths_${getUsername().replace(/\s+/g,'_')}_${ts}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setDataStatus(`✅ Exported ${answerTimes.length} answers for ${getUsername()}`, 'ok');
+  }
+
+  // ── Import ─────────────────────────────────────────────────────
+  function importResults(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.version || !Array.isArray(data.answerTimes)) throw new Error('Invalid format');
+
+        // Restore session
+        answerTimes   = data.answerTimes;
+        answerCorrect = data.answerCorrect || data.answerTimes.map(() => true);
+        correct       = data.correct  || answerCorrect.filter(Boolean).length;
+        wrong         = data.wrong    || answerCorrect.filter(v=>!v).length;
+        streak        = data.streak   || 0;
+        lastTime      = answerTimes[answerTimes.length - 1] || null;
+        lastWasCorrect= answerCorrect[answerCorrect.length - 1] ?? null;
+
+        // Restore username
+        if (data.username) {
+          document.getElementById('username').value = data.username;
+          localStorage.setItem('mathsUsername', data.username);
+        }
+
+        // Restore ranges if present
+        if (data.ranges) {
+          const set = (id, val) => { if (val !== undefined) document.getElementById(id).value = val; };
+          const r = data.ranges;
+          set('add-a-min', r.addAMin); set('add-a-max', r.addAMax);
+          set('add-b-min', r.addBMin); set('add-b-max', r.addBMax);
+          set('sub-min',   r.subMin);  set('sub-max',   r.subMax);
+          set('mul-a-min', r.mulAMin); set('mul-a-max', r.mulAMax);
+          set('mul-b-min', r.mulBMin); set('mul-b-max', r.mulBMax);
+          set('div-d-min', r.divDMin); set('div-d-max', r.divDMax);
+          set('div-q-min', r.divQMin); set('div-q-max', r.divQMax);
+          saveRanges();
+        }
+
+        updateStats();
+        setDataStatus(
+          `✅ Loaded ${answerTimes.length} answers for ${data.username || 'Unknown'} (${data.exported ? new Date(data.exported).toLocaleDateString() : '?'})`,
+          'ok'
+        );
+      } catch(err) {
+        setDataStatus('⚠️ Could not read file — is it a valid Maths export?', 'err');
+      }
+      // Reset the file input so the same file can be re-imported
+      event.target.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  // ── Reset ──────────────────────────────────────────────────────
+  function resetSession() {
+    if (!confirm('Reset all answers and stats? (Name and ranges are kept)')) return;
+    correct = 0; wrong = 0; streak = 0;
+    answerTimes = []; answerCorrect = [];
+    lastTime = null; lastWasCorrect = null;
+    document.getElementById('correct-count').textContent = '0';
+    document.getElementById('wrong-count').textContent   = '0';
+    document.getElementById('streak-count').textContent  = '0';
+    document.getElementById('accuracy').textContent      = '—';
+    document.getElementById('avg-time').textContent      = '—';
+    document.getElementById('stddev-time').textContent   = '—';
+    document.getElementById('bell-wrap').style.display   = 'none';
+    document.getElementById('bar-wrap').style.display    = 'none';
+    clearFeedback();
+    generateQuestion();
+    setDataStatus('Session reset', 'ok');
+  }
+
+  function setDataStatus(msg, type) {
+    const el = document.getElementById('data-status');
+    el.textContent  = msg;
+    el.className    = 'data-status' + (type ? ' ' + type : '');
+    setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 4000);
   }
 
   // ── Enter key ──────────────────────────────────────────────────
