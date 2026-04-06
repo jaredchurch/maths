@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title>Maths Practice 🧮</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,141 +14,209 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 20px;
+      padding: 16px 12px 40px;
     }
 
     h1 {
       color: white;
-      font-size: 2.5rem;
-      margin-bottom: 10px;
+      font-size: clamp(1.6rem, 6vw, 2.5rem);
+      margin-bottom: 4px;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      text-align: center;
     }
-
     .subtitle {
       color: rgba(255,255,255,0.85);
-      font-size: 1.1rem;
-      margin-bottom: 30px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 24px;
-      padding: 40px;
-      width: 100%;
-      max-width: 540px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      font-size: clamp(0.85rem, 3vw, 1.1rem);
+      margin-bottom: 16px;
       text-align: center;
     }
 
-    .ops {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
+    /* ── Card ── */
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: clamp(16px, 4vw, 32px);
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+      text-align: center;
     }
 
+    /* ── Op buttons ── */
+    .ops {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
     .op-btn {
-      padding: 10px 20px;
-      border: 3px solid #e0e0e0;
-      border-radius: 50px;
-      font-size: 1.1rem;
+      padding: 10px 4px;
+      border: 2.5px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: clamp(0.8rem, 3vw, 1rem);
       cursor: pointer;
       background: white;
       color: #555;
+      font-weight: 700;
       transition: all 0.2s;
-      font-weight: 600;
+      white-space: nowrap;
     }
-    .op-btn:hover { border-color: #667eea; color: #667eea; }
-    .op-btn.active {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      border-color: transparent;
-      color: white;
+    .op-btn:hover  { border-color: #667eea; color: #667eea; }
+    .op-btn.active { background: linear-gradient(135deg, #667eea, #764ba2); border-color: transparent; color: white; }
+
+    /* ── Settings panel ── */
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #667eea;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+      user-select: none;
+    }
+    .settings-toggle span { font-size: 0.7rem; }
+
+    .settings-panel {
+      background: #f8f8fc;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+      text-align: left;
+      display: none;
+    }
+    .settings-panel.open { display: block; }
+
+    .settings-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #999;
+      margin-bottom: 10px;
     }
 
-    .prev-feedback {
-      min-height: 40px;
-      font-size: 1.15rem;
+    .range-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 400px) {
+      .range-grid { grid-template-columns: 1fr; }
+    }
+
+    .range-group {
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      border: 1.5px solid #e5e7eb;
+    }
+    .range-group-title {
+      font-size: 0.72rem;
       font-weight: 700;
-      border-radius: 12px;
-      padding: 8px 16px;
-      margin-bottom: 18px;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .range-row:last-child { margin-bottom: 0; }
+    .range-row label { font-size: 0.72rem; color: #888; width: 28px; }
+    .range-row input[type="number"] {
+      width: 58px;
+      padding: 4px 6px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      text-align: center;
+      color: #333;
+    }
+    .range-row input[type="number"]:focus { outline: none; border-color: #667eea; }
+
+    /* ── Feedback banner ── */
+    .prev-feedback {
+      font-size: clamp(0.9rem, 3vw, 1.1rem);
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
       opacity: 0;
       transition: opacity 0.3s;
+      min-height: 38px;
     }
     .prev-feedback.visible { opacity: 1; }
     .prev-feedback.correct { background: #f0fdf4; color: #16a34a; border: 2px solid #bbf7d0; }
     .prev-feedback.wrong   { background: #fef2f2; color: #dc2626; border: 2px solid #fecaca; }
 
+    /* ── Question ── */
     .question {
-      font-size: 3rem;
-      font-weight: 700;
+      font-size: clamp(2.2rem, 10vw, 3.2rem);
+      font-weight: 800;
       color: #333;
-      margin-bottom: 24px;
-      min-height: 60px;
+      margin-bottom: 20px;
+      min-height: 52px;
+      line-height: 1;
     }
 
+    /* ── Answer row ── */
     .answer-row {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
-
     #answer {
-      font-size: 2rem;
-      width: 140px;
-      padding: 12px 16px;
+      font-size: clamp(1.5rem, 6vw, 2rem);
+      width: clamp(100px, 28vw, 140px);
+      padding: 10px 12px;
       border: 3px solid #e0e0e0;
-      border-radius: 16px;
+      border-radius: 14px;
       text-align: center;
       outline: none;
       transition: border-color 0.2s;
+      -moz-appearance: textfield;
     }
+    #answer::-webkit-inner-spin-button,
+    #answer::-webkit-outer-spin-button { -webkit-appearance: none; }
     #answer:focus { border-color: #667eea; }
 
     #check-btn {
-      padding: 14px 28px;
-      font-size: 1.2rem;
+      padding: 12px clamp(16px, 4vw, 24px);
+      font-size: clamp(1rem, 4vw, 1.15rem);
       font-weight: 700;
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
       border: none;
-      border-radius: 16px;
+      border-radius: 14px;
       cursor: pointer;
       transition: transform 0.1s, box-shadow 0.2s;
-      box-shadow: 0 4px 15px rgba(102,126,234,0.5);
+      box-shadow: 0 4px 14px rgba(102,126,234,0.45);
+      white-space: nowrap;
     }
-    #check-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.6); }
+    #check-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(102,126,234,0.55); }
     #check-btn:active { transform: translateY(0); }
 
-    .score-bar {
+    /* ── Score / stats bars ── */
+    .score-bar, .stats-bar {
       display: flex;
-      justify-content: space-between;
+      justify-content: space-around;
       align-items: center;
-      padding: 14px 20px;
-      background: #f8f8fc;
-      border-radius: 16px;
-      margin-top: 8px;
-      margin-bottom: 10px;
+      padding: 12px 8px;
+      border-radius: 14px;
     }
+    .score-bar { background: #f8f8fc; margin-bottom: 8px; }
+    .stats-bar { background: #f1f5f9; margin-bottom: 14px; }
 
-    .stats-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 20px;
-      background: #f1f5f9;
-      border-radius: 16px;
-      margin-bottom: 16px;
-    }
-
-    .score-item { text-align: center; }
-    .score-num { font-size: 1.6rem; font-weight: 800; color: #333; }
-    .stat-num  { font-size: 1.25rem; font-weight: 800; color: #333; }
-    .score-label, .stat-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+    .score-item { text-align: center; flex: 1; }
+    .score-num  { font-size: clamp(1.2rem, 5vw, 1.6rem); font-weight: 800; color: #333; }
+    .stat-num   { font-size: clamp(1rem, 4vw, 1.25rem); font-weight: 800; color: #333; }
+    .score-label, .stat-label { font-size: clamp(0.6rem, 2vw, 0.72rem); color: #888; text-transform: uppercase; letter-spacing: 0.04em; }
 
     .streak-num   { color: #f59e0b; }
     .correct-num  { color: #22c55e; }
@@ -156,34 +224,34 @@
     .accuracy-num { color: #667eea; }
     .time-num     { color: #0ea5e9; }
 
-    /* Bell curve */
-    .bell-wrap {
-      border-radius: 16px;
+    /* ── Charts ── */
+    .chart-wrap {
+      border-radius: 14px;
       background: #f8faff;
       border: 1.5px solid #e0e7ff;
-      padding: 12px 12px 6px;
+      padding: 10px 10px 6px;
+      margin-bottom: 10px;
     }
-
-    .bell-title {
-      font-size: 0.75rem;
+    .chart-title {
+      font-size: 0.72rem;
       color: #888;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 6px;
     }
-
-    #bell-canvas {
+    .chart-hint {
+      font-size: 0.68rem;
+      color: #aaa;
+      margin-top: 3px;
+    }
+    #bell-canvas, #bar-canvas {
       width: 100%;
-      height: 110px;
       display: block;
     }
+    #bell-canvas { height: 110px; }
+    #bar-canvas  { height: 120px; }
 
-    .bell-hint {
-      font-size: 0.72rem;
-      color: #aaa;
-      margin-top: 4px;
-    }
-
+    /* ── Emoji pop ── */
     .emoji-pop {
       position: fixed;
       font-size: 3rem;
@@ -191,12 +259,10 @@
       animation: floatUp 1s ease-out forwards;
       z-index: 999;
     }
-
     @keyframes floatUp {
       0%   { opacity: 1; transform: translateY(0) scale(1); }
       100% { opacity: 0; transform: translateY(-120px) scale(1.5); }
     }
-
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       20%      { transform: translateX(-8px); }
@@ -213,23 +279,119 @@
 <p class="subtitle">Let's get those brain muscles going!</p>
 
 <div class="card">
+
+  <!-- Op selector -->
   <div class="ops">
     <button class="op-btn active" data-op="+" onclick="setOp(this)">➕ Add</button>
-    <button class="op-btn" data-op="-" onclick="setOp(this)">➖ Subtract</button>
-    <button class="op-btn" data-op="×" onclick="setOp(this)">✖️ Multiply</button>
-    <button class="op-btn" data-op="÷" onclick="setOp(this)">➗ Divide</button>
+    <button class="op-btn"        data-op="-" onclick="setOp(this)">➖ Sub</button>
+    <button class="op-btn"        data-op="×" onclick="setOp(this)">✖️ Mult</button>
+    <button class="op-btn"        data-op="÷" onclick="setOp(this)">➗ Div</button>
   </div>
 
+  <!-- Settings toggle -->
+  <div class="settings-toggle" onclick="toggleSettings()">
+    ⚙️ Number ranges <span id="settings-arrow">▼</span>
+  </div>
+
+  <!-- Settings panel -->
+  <div class="settings-panel" id="settings-panel">
+    <div class="settings-title">Adjust ranges for each operation</div>
+    <div class="range-grid">
+
+      <div class="range-group">
+        <div class="range-group-title">➕ Addition</div>
+        <div class="range-row">
+          <label>A min</label>
+          <input type="number" id="add-a-min" value="1"  min="0" max="9999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>A max</label>
+          <input type="number" id="add-a-max" value="20" min="0" max="9999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>B min</label>
+          <input type="number" id="add-b-min" value="1"  min="0" max="9999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>B max</label>
+          <input type="number" id="add-b-max" value="20" min="0" max="9999" oninput="saveRanges()"/>
+        </div>
+      </div>
+
+      <div class="range-group">
+        <div class="range-group-title">➖ Subtraction</div>
+        <div class="range-row">
+          <label>Min</label>
+          <input type="number" id="sub-min" value="5"  min="0" max="9999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>Max</label>
+          <input type="number" id="sub-max" value="20" min="0" max="9999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row" style="margin-top:4px;">
+          <label style="width:auto;font-size:0.68rem;color:#aaa;font-style:italic;">B is always ≤ A (no negatives)</label>
+        </div>
+      </div>
+
+      <div class="range-group">
+        <div class="range-group-title">✖️ Multiply</div>
+        <div class="range-row">
+          <label>A min</label>
+          <input type="number" id="mul-a-min" value="1"  min="0" max="999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>A max</label>
+          <input type="number" id="mul-a-max" value="10" min="0" max="999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>B min</label>
+          <input type="number" id="mul-b-min" value="1"  min="0" max="999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>B max</label>
+          <input type="number" id="mul-b-max" value="10" min="0" max="999" oninput="saveRanges()"/>
+        </div>
+      </div>
+
+      <div class="range-group">
+        <div class="range-group-title">➗ Division</div>
+        <div class="range-row">
+          <label>D min</label>
+          <input type="number" id="div-d-min" value="1"  min="1" max="999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>D max</label>
+          <input type="number" id="div-d-max" value="10" min="1" max="999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>Q min</label>
+          <input type="number" id="div-q-min" value="1"  min="1" max="999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label>Q max</label>
+          <input type="number" id="div-q-max" value="10" min="1" max="999" oninput="saveRanges()"/>
+        </div>
+        <div class="range-row">
+          <label style="width:auto;font-size:0.68rem;color:#aaa;font-style:italic;">D=divisor, Q=quotient</label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Feedback banner (previous answer) -->
   <div class="prev-feedback" id="prev-feedback"></div>
 
+  <!-- Question -->
   <div class="question" id="question">Loading...</div>
 
+  <!-- Answer input -->
   <div class="answer-row">
-    <input type="text" inputmode="numeric" pattern="[0-9]*" id="answer" placeholder="?" autocomplete="off" />
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="answer" placeholder="?" autocomplete="off"/>
     <button id="check-btn" onclick="checkAnswer()">Check ✅</button>
   </div>
 
-  <!-- Row 1: correct / wrong / streak -->
+  <!-- Score bar -->
   <div class="score-bar">
     <div class="score-item">
       <div class="score-num correct-num" id="correct-count">0</div>
@@ -245,7 +407,7 @@
     </div>
   </div>
 
-  <!-- Row 2: accuracy / avg time / stddev -->
+  <!-- Stats bar -->
   <div class="stats-bar">
     <div class="score-item">
       <div class="stat-num accuracy-num" id="accuracy">—</div>
@@ -261,250 +423,101 @@
     </div>
   </div>
 
-  <!-- Bell curve -->
-  <div class="bell-wrap" id="bell-wrap" style="display:none;">
-    <div class="bell-title">Response Time Distribution</div>
+  <!-- Bell curve (shown after 3 answers) -->
+  <div class="chart-wrap" id="bell-wrap" style="display:none;">
+    <div class="chart-title">Response Time Distribution</div>
     <canvas id="bell-canvas"></canvas>
-    <div class="bell-hint" id="bell-hint"></div>
+    <div class="chart-hint" id="bell-hint"></div>
   </div>
+
+  <!-- Bar chart: time per question -->
+  <div class="chart-wrap" id="bar-wrap" style="display:none;">
+    <div class="chart-title">Time per Question <span style="color:#3b82f6;">■</span> Correct &nbsp;<span style="color:#ef4444;">■</span> Wrong</div>
+    <canvas id="bar-canvas"></canvas>
+  </div>
+
 </div>
 
 <script>
+  // ── State ──────────────────────────────────────────────────────
   let op = '+';
   let a = 0, b = 0, correctAnswer = 0;
   let correct = 0, wrong = 0, streak = 0;
   let questionStartTime = null;
-  let answerTimes = [];
-  let lastTime = null;
+  let answerTimes    = []; // all elapsed times
+  let answerCorrect  = []; // parallel bool array
+  let lastTime       = null;
   let lastWasCorrect = null;
 
+  // ── Range helpers ──────────────────────────────────────────────
+  function getR(id) { return parseInt(document.getElementById(id).value) || 0; }
+
+  function saveRanges() {
+    // Persist to localStorage so they survive page refresh
+    const cfg = {
+      addAMin: getR('add-a-min'), addAMax: getR('add-a-max'),
+      addBMin: getR('add-b-min'), addBMax: getR('add-b-max'),
+      subMin:  getR('sub-min'),   subMax:  getR('sub-max'),
+      mulAMin: getR('mul-a-min'), mulAMax: getR('mul-a-max'),
+      mulBMin: getR('mul-b-min'), mulBMax: getR('mul-b-max'),
+      divDMin: getR('div-d-min'), divDMax: getR('div-d-max'),
+      divQMin: getR('div-q-min'), divQMax: getR('div-q-max'),
+    };
+    localStorage.setItem('mathsRanges', JSON.stringify(cfg));
+  }
+
+  function loadRanges() {
+    try {
+      const cfg = JSON.parse(localStorage.getItem('mathsRanges'));
+      if (!cfg) return;
+      const set = (id, val) => { if (val !== undefined) document.getElementById(id).value = val; };
+      set('add-a-min', cfg.addAMin); set('add-a-max', cfg.addAMax);
+      set('add-b-min', cfg.addBMin); set('add-b-max', cfg.addBMax);
+      set('sub-min',   cfg.subMin);  set('sub-max',   cfg.subMax);
+      set('mul-a-min', cfg.mulAMin); set('mul-a-max', cfg.mulAMax);
+      set('mul-b-min', cfg.mulBMin); set('mul-b-max', cfg.mulBMax);
+      set('div-d-min', cfg.divDMin); set('div-d-max', cfg.divDMax);
+      set('div-q-min', cfg.divQMin); set('div-q-max', cfg.divQMax);
+    } catch(e) {}
+  }
+
+  // ── Op ranges (reads from settings panel) ─────────────────────
   const opRanges = {
-    '+': () => ({ a: rand(1, 100), b: rand(1, 100) }),
-    '-': () => { let x = rand(1, 100), y = rand(1, x); return { a: x, b: y }; },
-    '×': () => ({ a: rand(1, 12), b: rand(1, 12) }),
-    '÷': () => { let d = rand(1, 12), q = rand(1, 12); return { a: d * q, b: d }; }
+    '+': () => ({
+      a: rand(getR('add-a-min'), getR('add-a-max')),
+      b: rand(getR('add-b-min'), getR('add-b-max'))
+    }),
+    '-': () => {
+      const hi = getR('sub-max'), lo = getR('sub-min');
+      const x = rand(Math.max(lo, 1), hi);
+      const y = rand(lo > x ? x : lo, x);
+      return { a: x, b: y };
+    },
+    '×': () => ({
+      a: rand(getR('mul-a-min'), getR('mul-a-max')),
+      b: rand(getR('mul-b-min'), getR('mul-b-max'))
+    }),
+    '÷': () => {
+      const d = rand(Math.max(1, getR('div-d-min')), getR('div-d-max'));
+      const q = rand(Math.max(1, getR('div-q-min')), getR('div-q-max'));
+      return { a: d * q, b: d };
+    }
   };
 
-  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
-  function mean(arr) { return arr.reduce((s, v) => s + v, 0) / arr.length; }
-
-  function stddev(arr) {
-    if (arr.length < 2) return null;
-    const m = mean(arr);
-    return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length);
+  function rand(min, max) {
+    min = Math.min(min, max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  function formatTime(s) { return s.toFixed(1) + 's'; }
-
-  // Normal distribution PDF
-  function normPDF(x, mu, sigma) {
-    return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mu) / sigma) ** 2);
+  // ── Settings toggle ────────────────────────────────────────────
+  function toggleSettings() {
+    const panel = document.getElementById('settings-panel');
+    const arrow = document.getElementById('settings-arrow');
+    const open  = panel.classList.toggle('open');
+    arrow.textContent = open ? '▲' : '▼';
   }
 
-  function drawBellCurve() {
-    if (answerTimes.length < 2) return;
-
-    const mu = mean(answerTimes);
-    const sd = stddev(answerTimes);
-    if (!sd || sd === 0) return;
-
-    const canvas = document.getElementById('bell-canvas');
-    // Set physical pixel size for sharpness
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width  = rect.width  * dpr;
-    canvas.height = rect.height * dpr;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-
-    const W = rect.width;
-    const H = rect.height;
-    const padX = 28, padTop = 10, padBot = 22;
-    const plotW = W - padX * 2;
-    const plotH = H - padTop - padBot;
-
-    // X range: mu ± 3.5 sigma, but always include lastTime
-    let xMin = mu - 3.5 * sd;
-    let xMax = mu + 3.5 * sd;
-    if (lastTime !== null) {
-      xMin = Math.min(xMin, lastTime - sd * 0.5);
-      xMax = Math.max(xMax, lastTime + sd * 0.5);
-    }
-    xMin = Math.max(0, xMin);
-
-    const steps = 300;
-    const dx = (xMax - xMin) / steps;
-
-    // Compute Y values
-    const ys = [];
-    for (let i = 0; i <= steps; i++) {
-      ys.push(normPDF(xMin + i * dx, mu, sd));
-    }
-    const yMax = Math.max(...ys);
-
-    function toCanvasX(x) { return padX + ((x - xMin) / (xMax - xMin)) * plotW; }
-    function toCanvasY(y) { return padTop + plotH - (y / yMax) * plotH; }
-
-    ctx.clearRect(0, 0, W, H);
-
-    // --- Shaded area under curve (full) ---
-    ctx.beginPath();
-    ctx.moveTo(toCanvasX(xMin), toCanvasY(0));
-    for (let i = 0; i <= steps; i++) {
-      ctx.lineTo(toCanvasX(xMin + i * dx), toCanvasY(ys[i]));
-    }
-    ctx.lineTo(toCanvasX(xMax), toCanvasY(0));
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(102,126,234,0.12)';
-    ctx.fill();
-
-    // --- Highlight region: last answer time ± some visual band ---
-    if (lastTime !== null) {
-      const highlightColor = lastWasCorrect ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)';
-      // Shade from xMin up to lastTime (cumulative feel)
-      ctx.beginPath();
-      const tStart = Math.max(xMin, lastTime - dx);
-      const tEnd   = Math.min(xMax, lastTime + dx);
-      // Draw a narrow vertical band at lastTime
-      const lx = toCanvasX(lastTime);
-      ctx.beginPath();
-      // Fill area under curve up to lastTime
-      ctx.moveTo(toCanvasX(xMin), toCanvasY(0));
-      for (let i = 0; i <= steps; i++) {
-        const xi = xMin + i * dx;
-        if (xi > lastTime) break;
-        ctx.lineTo(toCanvasX(xi), toCanvasY(ys[i]));
-      }
-      // Interpolate exactly to lastTime
-      const fracIdx = (lastTime - xMin) / dx;
-      const i0 = Math.floor(fracIdx);
-      const frac = fracIdx - i0;
-      const yAtLast = i0 < ys.length - 1
-        ? ys[i0] + frac * (ys[i0 + 1] - ys[i0])
-        : ys[ys.length - 1];
-      ctx.lineTo(toCanvasX(lastTime), toCanvasY(yAtLast));
-      ctx.lineTo(toCanvasX(lastTime), toCanvasY(0));
-      ctx.closePath();
-      ctx.fillStyle = lastWasCorrect ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)';
-      ctx.fill();
-    }
-
-    // --- Bell curve line ---
-    ctx.beginPath();
-    for (let i = 0; i <= steps; i++) {
-      const cx = toCanvasX(xMin + i * dx);
-      const cy = toCanvasY(ys[i]);
-      i === 0 ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
-    }
-    ctx.strokeStyle = '#667eea';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // --- Mean line ---
-    const mx = toCanvasX(mu);
-    ctx.beginPath();
-    ctx.moveTo(mx, padTop);
-    ctx.lineTo(mx, padTop + plotH);
-    ctx.strokeStyle = '#94a3b8';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 3]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // --- Last answer time marker ---
-    if (lastTime !== null) {
-      const lx = toCanvasX(lastTime);
-      const fracIdx = (lastTime - xMin) / dx;
-      const i0 = Math.floor(Math.max(0, Math.min(steps - 1, fracIdx)));
-      const frac = fracIdx - i0;
-      const yAtLast = i0 < ys.length - 1
-        ? ys[i0] + frac * (ys[i0 + 1] - ys[i0])
-        : ys[ys.length - 1];
-      const ly = toCanvasY(yAtLast);
-
-      const dotColor = lastWasCorrect ? '#22c55e' : '#ef4444';
-
-      // Vertical line from baseline to dot
-      ctx.beginPath();
-      ctx.moveTo(lx, padTop + plotH);
-      ctx.lineTo(lx, ly);
-      ctx.strokeStyle = dotColor;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Dot on curve
-      ctx.beginPath();
-      ctx.arc(lx, ly, 6, 0, Math.PI * 2);
-      ctx.fillStyle = dotColor;
-      ctx.fill();
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Time label above dot
-      ctx.fillStyle = dotColor;
-      ctx.font = 'bold 11px Segoe UI, sans-serif';
-      ctx.textAlign = lx > W * 0.75 ? 'right' : lx < W * 0.25 ? 'left' : 'center';
-      ctx.fillText(formatTime(lastTime), lx, Math.max(padTop + 10, ly - 10));
-    }
-
-    // --- X axis labels ---
-    ctx.fillStyle = '#aaa';
-    ctx.font = '10px Segoe UI, sans-serif';
-    ctx.textAlign = 'center';
-    // Show labels at mu-2sd, mu-sd, mu, mu+sd, mu+2sd
-    [-2, -1, 0, 1, 2].forEach(n => {
-      const xVal = mu + n * sd;
-      if (xVal < xMin || xVal > xMax) return;
-      const cx = toCanvasX(xVal);
-      ctx.fillStyle = n === 0 ? '#667eea' : '#bbb';
-      ctx.fillText(formatTime(xVal), cx, H - 4);
-    });
-
-    // Update hint
-    const zScore = lastTime !== null ? ((lastTime - mu) / sd) : null;
-    const bellWrap = document.getElementById('bell-wrap');
-    bellWrap.style.display = 'block';
-
-    if (zScore !== null) {
-      const pct = Math.round(normCDF(zScore) * 100);
-      const hintEl = document.getElementById('bell-hint');
-      const fasterSlower = zScore < 0 ? 'faster' : 'slower';
-      hintEl.textContent = `Last answer (${formatTime(lastTime)}) was ${fasterSlower} than ${zScore < 0 ? 100 - pct : pct}% of answers`;
-    }
-  }
-
-  // Approximation of the normal CDF using error function
-  function normCDF(z) {
-    return 0.5 * (1 + erf(z / Math.sqrt(2)));
-  }
-
-  function erf(x) {
-    // Abramowitz & Stegun approximation
-    const t = 1 / (1 + 0.3275911 * Math.abs(x));
-    const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
-    const result = 1 - poly * Math.exp(-x * x);
-    return x >= 0 ? result : -result;
-  }
-
-  function updateStats() {
-    const total = correct + wrong;
-    document.getElementById('correct-count').textContent = correct;
-    document.getElementById('wrong-count').textContent = wrong;
-    document.getElementById('streak-count').textContent = streak;
-    document.getElementById('accuracy').textContent = total > 0
-      ? Math.round((correct / total) * 100) + '%' : '—';
-
-    if (answerTimes.length > 0) {
-      document.getElementById('avg-time').textContent = formatTime(mean(answerTimes));
-      const sd = stddev(answerTimes);
-      document.getElementById('stddev-time').textContent = sd !== null ? formatTime(sd) : '—';
-    }
-
-    drawBellCurve();
-  }
-
+  // ── Op switching ───────────────────────────────────────────────
   function setOp(btn) {
     document.querySelectorAll('.op-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -519,74 +532,326 @@
     fb.textContent = '';
   }
 
+  // ── Question generation ────────────────────────────────────────
   function generateQuestion() {
     const { a: x, b: y } = opRanges[op]();
     a = x; b = y;
-    if (op === '+') correctAnswer = a + b;
+    if      (op === '+') correctAnswer = a + b;
     else if (op === '-') correctAnswer = a - b;
     else if (op === '×') correctAnswer = a * b;
     else if (op === '÷') correctAnswer = a / b;
 
     document.getElementById('question').textContent = `${a} ${op} ${b} = ?`;
-    const answerEl = document.getElementById('answer');
-    answerEl.value = '';
-    answerEl.disabled = false;
-    answerEl.focus();
+    const ans = document.getElementById('answer');
+    ans.value = '';
+    ans.disabled = false;
+    ans.focus();
     questionStartTime = performance.now();
   }
 
+  // ── Check answer ───────────────────────────────────────────────
   function checkAnswer() {
-    const answerEl = document.getElementById('answer');
-    const input = answerEl.value.trim();
+    const ansEl = document.getElementById('answer');
+    const input = ansEl.value.trim();
     if (input === '') return;
 
-    const elapsed = (performance.now() - questionStartTime) / 1000;
-    answerTimes.push(elapsed);
-    lastTime = elapsed;
-
+    const elapsed    = (performance.now() - questionStartTime) / 1000;
     const userAnswer = parseFloat(input);
-    const fb = document.getElementById('prev-feedback');
+    const fb         = document.getElementById('prev-feedback');
+
+    answerTimes.push(elapsed);
 
     if (userAnswer === correctAnswer) {
-      correct++;
-      streak++;
+      correct++; streak++;
+      answerCorrect.push(true);
       lastWasCorrect = true;
       fb.textContent = streak >= 3
-        ? `🔥 ${a} ${op} ${b} = ${correctAnswer} — Correct! ${streak} in a row! (${formatTime(elapsed)})`
-        : `✅ ${a} ${op} ${b} = ${correctAnswer} — Correct! (${formatTime(elapsed)})`;
+        ? `🔥 ${a} ${op} ${b} = ${correctAnswer} — Correct! ${streak} in a row! (${fmt(elapsed)})`
+        : `✅ ${a} ${op} ${b} = ${correctAnswer} — Correct! (${fmt(elapsed)})`;
       fb.className = 'prev-feedback correct visible';
       spawnEmoji(streak >= 5 ? '🌟' : '⭐');
     } else {
-      wrong++;
-      streak = 0;
+      wrong++; streak = 0;
+      answerCorrect.push(false);
       lastWasCorrect = false;
-      fb.textContent = `❌ ${a} ${op} ${b} = ${correctAnswer} — you said ${userAnswer} (${formatTime(elapsed)})`;
+      fb.textContent = `❌ ${a} ${op} ${b} = ${correctAnswer} — you said ${userAnswer} (${fmt(elapsed)})`;
       fb.className = 'prev-feedback wrong visible';
-      answerEl.classList.add('shake');
-      setTimeout(() => answerEl.classList.remove('shake'), 350);
+      ansEl.classList.add('shake');
+      setTimeout(() => ansEl.classList.remove('shake'), 350);
     }
 
+    lastTime = elapsed;
     updateStats();
     generateQuestion();
   }
 
+  function fmt(s) { return s.toFixed(1) + 's'; }
+
+  // ── Stats ──────────────────────────────────────────────────────
+  function mean(arr)   { return arr.reduce((s,v) => s+v, 0) / arr.length; }
+  function stddev(arr) {
+    if (arr.length < 2) return null;
+    const m = mean(arr);
+    return Math.sqrt(arr.reduce((s,v) => s+(v-m)**2, 0) / arr.length);
+  }
+
+  function updateStats() {
+    const total = correct + wrong;
+    document.getElementById('correct-count').textContent = correct;
+    document.getElementById('wrong-count').textContent   = wrong;
+    document.getElementById('streak-count').textContent  = streak;
+    document.getElementById('accuracy').textContent      = total > 0 ? Math.round((correct/total)*100)+'%' : '—';
+
+    if (answerTimes.length > 0) {
+      document.getElementById('avg-time').textContent    = fmt(mean(answerTimes));
+      const sd = stddev(answerTimes);
+      document.getElementById('stddev-time').textContent = sd !== null ? fmt(sd) : '—';
+    }
+
+    // Bell curve: only show after 3 answers
+    if (answerTimes.length >= 3) {
+      document.getElementById('bell-wrap').style.display = 'block';
+      drawBellCurve();
+    }
+
+    // Bar chart: show after 1 answer
+    if (answerTimes.length >= 1) {
+      document.getElementById('bar-wrap').style.display = 'block';
+      drawBarChart();
+    }
+  }
+
+  // ── Bell curve ─────────────────────────────────────────────────
+  function normPDF(x, mu, sigma) {
+    return (1/(sigma*Math.sqrt(2*Math.PI))) * Math.exp(-0.5*((x-mu)/sigma)**2);
+  }
+  function normCDF(z) { return 0.5*(1+erf(z/Math.sqrt(2))); }
+  function erf(x) {
+    const t = 1/(1+0.3275911*Math.abs(x));
+    const p = t*(0.254829592+t*(-0.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))));
+    const r = 1-p*Math.exp(-x*x);
+    return x>=0 ? r : -r;
+  }
+
+  function drawBellCurve() {
+    const mu = mean(answerTimes);
+    const sd = stddev(answerTimes);
+    if (!sd || sd === 0) return;
+
+    const canvas = document.getElementById('bell-canvas');
+    const dpr    = window.devicePixelRatio || 1;
+    const rect   = canvas.getBoundingClientRect();
+    canvas.width  = rect.width  * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width, H = rect.height;
+    const padX = 28, padTop = 10, padBot = 22;
+    const plotW = W - padX*2, plotH = H - padTop - padBot;
+
+    let xMin = Math.max(0, mu - 3.5*sd);
+    let xMax = mu + 3.5*sd;
+    if (lastTime !== null) {
+      xMin = Math.min(xMin, lastTime - sd*0.5);
+      xMax = Math.max(xMax, lastTime + sd*0.5);
+    }
+
+    const steps = 300, dx = (xMax-xMin)/steps;
+    const ys = Array.from({length:steps+1}, (_,i) => normPDF(xMin+i*dx, mu, sd));
+    const yMax = Math.max(...ys);
+
+    const cx = x => padX + ((x-xMin)/(xMax-xMin))*plotW;
+    const cy = y => padTop + plotH - (y/yMax)*plotH;
+
+    ctx.clearRect(0,0,W,H);
+
+    // Full shaded area
+    ctx.beginPath();
+    ctx.moveTo(cx(xMin), cy(0));
+    ys.forEach((y,i) => ctx.lineTo(cx(xMin+i*dx), cy(y)));
+    ctx.lineTo(cx(xMax), cy(0));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(102,126,234,0.12)';
+    ctx.fill();
+
+    // Shaded area up to lastTime
+    if (lastTime !== null) {
+      ctx.beginPath();
+      ctx.moveTo(cx(xMin), cy(0));
+      for (let i=0; i<=steps; i++) {
+        const xi = xMin+i*dx;
+        if (xi > lastTime) break;
+        ctx.lineTo(cx(xi), cy(ys[i]));
+      }
+      const frac = (lastTime-xMin)/dx;
+      const i0   = Math.floor(Math.max(0, Math.min(steps-1, frac)));
+      const f    = frac - i0;
+      const yAt  = i0 < ys.length-1 ? ys[i0]+f*(ys[i0+1]-ys[i0]) : ys[ys.length-1];
+      ctx.lineTo(cx(lastTime), cy(yAt));
+      ctx.lineTo(cx(lastTime), cy(0));
+      ctx.closePath();
+      ctx.fillStyle = lastWasCorrect ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)';
+      ctx.fill();
+    }
+
+    // Curve line
+    ctx.beginPath();
+    ys.forEach((y,i) => { const px=cx(xMin+i*dx), py=cy(y); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+    ctx.strokeStyle='#667eea'; ctx.lineWidth=2; ctx.stroke();
+
+    // Mean dashed line
+    ctx.beginPath(); ctx.moveTo(cx(mu),padTop); ctx.lineTo(cx(mu),padTop+plotH);
+    ctx.strokeStyle='#94a3b8'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+
+    // Last-answer marker
+    if (lastTime !== null) {
+      const lx = cx(lastTime);
+      const frac = (lastTime-xMin)/dx;
+      const i0   = Math.floor(Math.max(0, Math.min(steps-1, frac)));
+      const f    = frac-i0;
+      const yAt  = i0<ys.length-1 ? ys[i0]+f*(ys[i0+1]-ys[i0]) : ys[ys.length-1];
+      const ly   = cy(yAt);
+      const dot  = lastWasCorrect ? '#22c55e' : '#ef4444';
+
+      ctx.beginPath(); ctx.moveTo(lx,padTop+plotH); ctx.lineTo(lx,ly);
+      ctx.strokeStyle=dot; ctx.lineWidth=2; ctx.stroke();
+
+      ctx.beginPath(); ctx.arc(lx,ly,5,0,Math.PI*2);
+      ctx.fillStyle=dot; ctx.fill();
+      ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+
+      ctx.fillStyle=dot; ctx.font='bold 10px Segoe UI,sans-serif';
+      ctx.textAlign = lx>W*0.75?'right':lx<W*0.25?'left':'center';
+      ctx.fillText(fmt(lastTime), lx, Math.max(padTop+10, ly-8));
+    }
+
+    // X-axis labels
+    ctx.fillStyle='#aaa'; ctx.font='10px Segoe UI,sans-serif'; ctx.textAlign='center';
+    [-2,-1,0,1,2].forEach(n => {
+      const xv = mu+n*sd;
+      if (xv<xMin||xv>xMax) return;
+      ctx.fillStyle = n===0 ? '#667eea' : '#bbb';
+      ctx.fillText(fmt(xv), cx(xv), H-4);
+    });
+
+    // Hint
+    if (lastTime !== null) {
+      const z = (lastTime-mu)/sd;
+      const pct = Math.round(normCDF(z)*100);
+      const dir = z<0 ? 'faster' : 'slower';
+      document.getElementById('bell-hint').textContent =
+        `Last answer (${fmt(lastTime)}) was ${dir} than ${z<0 ? 100-pct : pct}% of answers`;
+    }
+  }
+
+  // ── Bar chart ──────────────────────────────────────────────────
+  function drawBarChart() {
+    const canvas = document.getElementById('bar-canvas');
+    const dpr    = window.devicePixelRatio || 1;
+    const rect   = canvas.getBoundingClientRect();
+    canvas.width  = rect.width  * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width, H = rect.height;
+    const padL = 34, padR = 8, padTop = 8, padBot = 24;
+    const plotW = W - padL - padR;
+    const plotH = H - padTop - padBot;
+    const n     = answerTimes.length;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Y-axis max
+    const maxT = Math.max(...answerTimes) * 1.15 || 1;
+
+    // Grid lines
+    ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+    [0, 0.25, 0.5, 0.75, 1].forEach(frac => {
+      const y = padTop + plotH - frac*plotH;
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y); ctx.stroke();
+      if (frac > 0) {
+        ctx.fillStyle='#bbb'; ctx.font='9px Segoe UI'; ctx.textAlign='right';
+        ctx.fillText(fmt(frac*maxT), padL-3, y+3);
+      }
+    });
+
+    // Baseline
+    ctx.strokeStyle='#d1d5db'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(padL, padTop+plotH); ctx.lineTo(W-padR, padTop+plotH); ctx.stroke();
+
+    // Bars
+    const gap     = Math.max(1, plotW/(n*1.5));
+    const barW    = Math.max(4, Math.min(gap, plotW/n * 0.7));
+    const spacing = plotW / n;
+
+    answerTimes.forEach((t, i) => {
+      const barH = (t/maxT)*plotH;
+      const x    = padL + i*spacing + spacing/2 - barW/2;
+      const y    = padTop + plotH - barH;
+
+      // Bar colour
+      ctx.fillStyle = answerCorrect[i] ? 'rgba(59,130,246,0.8)' : 'rgba(239,68,68,0.8)';
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(x, y, barW, barH, [3,3,0,0])
+                    : (ctx.rect(x, y, barW, barH));
+      ctx.fill();
+
+      // Highlight last bar
+      if (i === n-1) {
+        ctx.strokeStyle = answerCorrect[i] ? '#1d4ed8' : '#b91c1c';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(x, y, barW, barH, [3,3,0,0])
+                      : ctx.rect(x, y, barW, barH);
+        ctx.stroke();
+      }
+    });
+
+    // X-axis labels — show every Nth to avoid crowding
+    ctx.fillStyle='#aaa'; ctx.font='9px Segoe UI'; ctx.textAlign='center';
+    const step = Math.max(1, Math.ceil(n/10));
+    answerTimes.forEach((_, i) => {
+      if ((i+1) % step === 0 || i === 0 || i === n-1) {
+        const x = padL + i*spacing + spacing/2;
+        ctx.fillText(i+1, x, H-6);
+      }
+    });
+
+    // Y-axis label
+    ctx.save();
+    ctx.translate(10, padTop+plotH/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillStyle='#aaa'; ctx.font='9px Segoe UI'; ctx.textAlign='center';
+    ctx.fillText('seconds', 0, 0);
+    ctx.restore();
+  }
+
+  // ── Emoji ──────────────────────────────────────────────────────
   function spawnEmoji(emoji) {
     const el = document.createElement('div');
     el.className = 'emoji-pop';
     el.textContent = emoji;
-    el.style.left = (Math.random() * 60 + 20) + 'vw';
-    el.style.top = '50vh';
+    el.style.left = (Math.random()*60+20)+'vw';
+    el.style.top  = '50vh';
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1000);
   }
 
+  // ── Enter key ──────────────────────────────────────────────────
   document.getElementById('answer').addEventListener('keydown', e => {
     if (e.key === 'Enter') checkAnswer();
   });
 
-  // Redraw bell curve on resize
-  window.addEventListener('resize', () => { if (answerTimes.length >= 2) drawBellCurve(); });
+  // ── Resize ─────────────────────────────────────────────────────
+  window.addEventListener('resize', () => {
+    if (answerTimes.length >= 3) drawBellCurve();
+    if (answerTimes.length >= 1) drawBarChart();
+  });
 
+  // ── Boot ───────────────────────────────────────────────────────
+  loadRanges();
   generateQuestion();
 </script>
 </body>
